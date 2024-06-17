@@ -44,10 +44,8 @@ public class TransactionController {
 	                return new ResponseEntity<>(customerRewardPoints, HttpStatus.OK);
 	            }
 	        } catch (NoSuchElementException e) {
-	            // Handle case where customer with given ID is not found
 	            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 	        } catch (Exception e) {
-	            // Log the exception
 	            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 	        }
 	    }
