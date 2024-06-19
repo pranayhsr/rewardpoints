@@ -22,7 +22,7 @@ public class TransactionController {
 		
 	@Autowired
     private RewardPointsService  rewardPointsService;
-	
+
 
 	  @GetMapping("/reward-points")
 	    public ResponseEntity<List<CustomerRewardPoints>> getCustomerRewardPoints() {
@@ -61,6 +61,7 @@ public class TransactionController {
 	            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 	        }
 	    }
+
 
     
 }
