@@ -3,13 +3,16 @@ package com.rewardPoints.controller;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import javax.validation.constraints.Max;
+import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,6 +29,7 @@ import com.rewardPoints.service.RewardPointsService;
 import com.rewardPoints.service.TransactionService;
 
 @RestController
+@Validated 
 public class TransactionController {
 		
 	@Autowired
@@ -45,21 +49,29 @@ public class TransactionController {
 	            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 	        }
 	    } 
-
+	  
 	  @GetMapping("/reward-points/{customerId}")
-	  @PreAuthorize("(hasRole('USER') ")
-	    public ResponseEntity<List<CustomerRewardPoints>> getCustomerRewardPointsByCustomerId(@Min(1) @Max(7) @PathVariable Integer customerId) {
+	    @PreAuthorize("hasRole('USER')")
+	    public ResponseEntity<?> getCustomerRewardPointsByCustomerId(
+	            @PathVariable
+	            @Pattern(regexp = "\\d+", message = "Customer ID must be a number")
+	            String customerId) {
+
 	        try {
-	            List<CustomerRewardPoints> customerRewardPoints = rewardPointsService.getCustomerRewardPointsByCustomerId(customerId);
+	            Integer customerIdInt = Integer.parseInt(customerId);
+
+	            List<CustomerRewardPoints> customerRewardPoints = rewardPointsService.getCustomerRewardPointsByCustomerId(customerIdInt);
 	            if (customerRewardPoints.isEmpty()) {
-	                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+	                return ResponseEntity.notFound().build();
 	            } else {
-	                return new ResponseEntity<>(customerRewardPoints, HttpStatus.OK);
+	                return ResponseEntity.ok(customerRewardPoints);
 	            }
+	        } catch (NumberFormatException e) {
+	            return ResponseEntity.badRequest().body("Customer ID must be a valid number");
 	        } catch (NoSuchElementException e) {
-	            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+	            return ResponseEntity.notFound().build();
 	        } catch (Exception e) {
-	            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 	        }
 	    }
  
@@ -79,29 +91,42 @@ public class TransactionController {
 	    
 	    @DeleteMapping("/transactions/{id}")
 	    @PreAuthorize("hasRole('ADMIN')")
-	    public ResponseEntity<Void> deleteTransactionById(@PathVariable Integer id) {
+	    public ResponseEntity<Void> deleteTransactionById(@PathVariable @NotNull String id) {
 	        try {
-	            boolean isDeleted = transactionService.deleteTransactionById(id);
+	            Integer transactionId = parseId(id);
+	            boolean isDeleted = transactionService.deleteTransactionById(transactionId);
 	            if (isDeleted) {
-	                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	                return ResponseEntity.noContent().build();
 	            } else {
-	                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+	                return ResponseEntity.notFound().build();
 	            }
+	        } catch (NumberFormatException e) {
+	            return ResponseEntity.badRequest().build(); 
+	        } catch (NoSuchElementException e) {
+	            return ResponseEntity.notFound().build();
 	        } catch (Exception e) {
-	            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 	        }
+	    }
+
+	    private Integer parseId(String id) throws NumberFormatException {
+	        return Integer.parseInt(id);
 	    }
 	    
 	    @PutMapping("/updatetransactions/{transactionId}")
 	    @PreAuthorize("hasRole('ADMIN') or (hasRole('USER') and @transactionSecurity.canUpdateTransaction(principal, #transactionId))")
-	    public ResponseEntity<String> updateTransaction(
-	            @PathVariable int transactionId,
-	            @RequestBody Transaction updatedTransaction) {
+	    public ResponseEntity<?> updateTransaction(
+	            @PathVariable @Min(value = 1, message = "Transaction ID must be greater than or equal to 1") int transactionId,
+	            @Valid @RequestBody Transaction updatedTransaction) {
 
 	        try {
+	            if (transactionId <= 0) {
+	                return ResponseEntity.badRequest().body("Transaction ID must be greater than or equal to 1");
+	            }
+
 	            Transaction existingTransaction = transactionService.getTransactionById(transactionId);
 	            if (existingTransaction == null) {
-	                return new ResponseEntity<>("Transaction not found with ID: " + transactionId, HttpStatus.NOT_FOUND);
+	                return ResponseEntity.notFound().build();
 	            }
 
 	            existingTransaction.setTransactionDate(updatedTransaction.getTransactionDate());
@@ -109,10 +134,10 @@ public class TransactionController {
 	            existingTransaction.setDescription(updatedTransaction.getDescription());
 
 	            transactionService.saveTransaction(existingTransaction);
-	            return new ResponseEntity<>("Transaction updated successfully", HttpStatus.OK);
+	            return ResponseEntity.ok("Transaction updated successfully");
 
 	        } catch (Exception e) {
-	            return new ResponseEntity<>("Failed to update transaction: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update transaction: " + e.getMessage());
 	        }
 	    }
     
