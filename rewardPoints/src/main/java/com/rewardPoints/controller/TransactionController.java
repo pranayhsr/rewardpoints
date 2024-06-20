@@ -86,11 +86,6 @@ public class TransactionController {
 	            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 	        }
 	    }
-	    @Autowired
-	    public TransactionController(TransactionService transactionService) {
-	        this.transactionService = transactionService;
-	    }
-
 
 	    @PutMapping("/updatetransactions/{transactionId}")
 	    public ResponseEntity<String> updateTransaction(
