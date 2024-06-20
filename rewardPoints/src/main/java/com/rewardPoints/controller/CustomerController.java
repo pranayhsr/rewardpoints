@@ -1,5 +1,8 @@
 package com.rewardPoints.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,20 +24,26 @@ public class CustomerController {
 
 	   
 	   @PostMapping("/saveCustData")
-	    public ResponseEntity<Object> saveCustomer(@RequestBody CustomerDTO customerDTO) {
-	        try {
-	            Customer customer = new Customer();
-	            customer.setCustomerName(customerDTO.getCustomerName());
-	            customer.setEmail(customerDTO.getEmail());
+	   public ResponseEntity<Object> saveCustomers(@RequestBody List<CustomerDTO> customerDTOs) {
+	       try {
+	           List<Customer> savedCustomers = new ArrayList<>();
+	           
+	           for (CustomerDTO customerDTO : customerDTOs) {
+	               Customer customer = new Customer();
+	               customer.setCustomerName(customerDTO.getCustomerName());
+	               customer.setEmail(customerDTO.getEmail());
 
-	            Customer savedCustomer = customerService.saveCustomer(customer);
-	            return new ResponseEntity<>(savedCustomer, HttpStatus.CREATED);
+	               Customer savedCustomer = customerService.saveCustomer(customer);
+	               savedCustomers.add(savedCustomer);
+	           }
 
-	        } catch (IllegalArgumentException e) {
-	            return new ResponseEntity<>("Invalid input: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+	           return new ResponseEntity<>(savedCustomers, HttpStatus.CREATED);
 
-	        } catch (Exception e) {
-	            return new ResponseEntity<>("An error occurred while saving the customer data: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-	        }
-	    }
+	       } catch (IllegalArgumentException e) {
+	           return new ResponseEntity<>("Invalid input: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+
+	       } catch (Exception e) {
+	           return new ResponseEntity<>("An error occurred while saving the customer data: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+	       } 
+	   }
 }

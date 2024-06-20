@@ -1,16 +1,15 @@
-openapi: 3.0.1
+openapi: 3.0.3
 info:
   title: Reward Points API
-  description: Operations related to customer reward points and transactions
+  description: API for managing customer reward points and transactions
   version: 1.0.0
 paths:
   /reward-points:
     get:
-      summary: Get all customer reward points
-      description: Fetches all customer reward points
+      summary: Retrieve all customer reward points
       responses:
         '200':
-          description: Successfully retrieved reward points
+          description: A list of customer reward points
           content:
             application/json:
               schema:
@@ -19,36 +18,36 @@ paths:
                   $ref: '#/components/schemas/CustomerRewardPoints'
         '500':
           description: Internal server error
+   
   /reward-points/{customerId}:
     get:
-      summary: Get customer reward points by customer ID
-      description: Fetches reward points for a given customer ID
+      summary: Retrieve customer reward points by customer ID
       parameters:
         - name: customerId
           in: path
           required: true
-          description: ID of the customer to fetch reward points for
+          description: ID of the customer
           schema:
             type: integer
+            format: int32
+            minimum: 1
+            maximum: 7
       responses:
         '200':
-          description: Successfully retrieved reward points
+          description: A list of customer reward points
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/CustomerRewardPoints'
-        '400':
-          description: Invalid customer ID supplied
         '404':
-          description: Customer not found
+          description: Customer reward points not found
         '500':
           description: Internal server error
   /transactions:
     post:
       summary: Save transaction and reward points
-      description: Saves a new transaction and calculates reward points for a customer
       requestBody:
         required: true
         content:
@@ -57,13 +56,78 @@ paths:
               $ref: '#/components/schemas/TransactionRequestDTO'
       responses:
         '201':
-          description: Transaction and reward points successfully saved
+          description: Transaction and reward points saved successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TransactionResponseDTO'
         '400':
-          description: Invalid input supplied
+          description: Bad request
+        '500':
+          description: Internal server error
+  /transactions/{id}:
+    delete:
+      summary: Delete transaction by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the transaction to delete
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '204':
+          description: Transaction deleted successfully
+        '404':
+          description: Transaction not found
+        '500':
+          description: Internal server error
+    put:
+      summary: Update transaction by ID
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          description: ID of the transaction to update
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Transaction'
+      responses:
+        '200':
+          description: Transaction updated successfully
+        '404':
+          description: Transaction not found
+        '500':
+          description: Internal server error
+  /saveCustData:
+    post:
+      summary: Save multiple customers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CustomerDTO'
+      responses:
+        '201':
+          description: Customers saved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+        '400':
+          description: Bad request
         '500':
           description: Internal server error
 components:
@@ -71,35 +135,66 @@ components:
     CustomerRewardPoints:
       type: object
       properties:
-        id:
-          type: integer
-          example: 1
         customerId:
           type: integer
-          example: 123
+          format: int32
         points:
           type: integer
-          example: 150
-        transactionDate:
-          type: string
-          format: date-time
-          example: 2023-01-01T10:00:00Z
     TransactionRequestDTO:
       type: object
       properties:
         customerId:
           type: integer
-          example: 123
-        transactionAmount:
+          format: int32
+        transactionDate:
+          type: string
+          format: date
+        amount:
           type: number
-          format: double
-          example: 250.75
+        description:
+          type: string
     TransactionResponseDTO:
       type: object
       properties:
         transactionId:
           type: integer
-          example: 456
-        rewardPoints:
+          format: int32
+        customerId:
           type: integer
-          example: 250
+          format: int32
+        amount:
+          type: number
+        pointsEarned:
+          type: integer
+    Transaction:
+      type: object
+      properties:
+        transactionId:
+          type: integer
+          format: int32
+        customer:
+          $ref: '#/components/schemas/Customer'
+        transactionDate:
+          type: string
+          format: date
+        amount:
+          type: number
+        description:
+          type: string
+    CustomerDTO:
+      type: object
+      properties:
+        customerName:
+          type: string
+        email:
+          type: string
+    Customer:
+      type: object
+      properties:
+        customerId:
+          type: integer
+          format: int32
+        customerName:
+          type: string
+        email:
+          type: string

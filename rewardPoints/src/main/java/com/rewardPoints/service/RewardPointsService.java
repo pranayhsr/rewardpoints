@@ -3,6 +3,7 @@ package com.rewardPoints.service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import javax.transaction.Transactional;
 
@@ -42,7 +43,7 @@ public class RewardPointsService {
     public void saveRewardPoints(RewardPoints rewardPoints) {
         rewardPointsRepository.save(rewardPoints);
     }
-
+    
 
 
     @Transactional
@@ -77,7 +78,7 @@ public class RewardPointsService {
 
         return responseDTO;
     }
-
+ 
     private int calculateRewardPoints(double amount) {
         int points = 0;
 
