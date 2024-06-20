@@ -36,6 +36,7 @@ public class TransactionController {
  
 
 	  @GetMapping("/reward-points")
+	  @PreAuthorize("(hasRole('USER') ")
 	    public ResponseEntity<List<CustomerRewardPoints>> getCustomerRewardPoints() {
 	        try {
 	            List<CustomerRewardPoints> customerRewardPoints = rewardPointsService.getCustomerRewardPoints();
@@ -46,6 +47,7 @@ public class TransactionController {
 	    } 
 
 	  @GetMapping("/reward-points/{customerId}")
+	  @PreAuthorize("(hasRole('USER') ")
 	    public ResponseEntity<List<CustomerRewardPoints>> getCustomerRewardPointsByCustomerId(@Min(1) @Max(7) @PathVariable Integer customerId) {
 	        try {
 	            List<CustomerRewardPoints> customerRewardPoints = rewardPointsService.getCustomerRewardPointsByCustomerId(customerId);
@@ -62,6 +64,7 @@ public class TransactionController {
 	    }
  
 	    @PostMapping("/transactions")
+	    @PreAuthorize("(hasRole('USER') ")
 	    public ResponseEntity<TransactionResponseDTO> saveTransactionAndRewardPoints(@RequestBody TransactionRequestDTO requestDTO) {
 	        try {
 	            TransactionResponseDTO responseDTO = rewardPointsService.saveTransactionAndRewardPoints(requestDTO);
@@ -73,20 +76,6 @@ public class TransactionController {
 	        }
 	    }
 
-	    
-//	    @DeleteMapping("/transactions/{id}")
-//	    public ResponseEntity<Void> deleteTransactionById(@PathVariable Integer id) {
-//	        try {
-//	            boolean isDeleted = transactionService.deleteTransactionById(id);
-//	            if (isDeleted) {
-//	                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-//	            } else {
-//	                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-//	            }
-//	        } catch (Exception e) {
-//	            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-//	        }
-//	    }
 	    
 	    @DeleteMapping("/transactions/{id}")
 	    @PreAuthorize("hasRole('ADMIN')")
@@ -102,30 +91,6 @@ public class TransactionController {
 	            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 	        }
 	    }
-	    
-
-//	    @PutMapping("/updatetransactions/{transactionId}")
-//	    public ResponseEntity<String> updateTransaction(
-//	            @PathVariable int transactionId,
-//	            @RequestBody Transaction updatedTransaction) {
-//
-//	        try {
-//	            Transaction existingTransaction = transactionService.getTransactionById(transactionId);
-//	            if (existingTransaction == null) {
-//	                return new ResponseEntity<>("Transaction not found with ID: " + transactionId, HttpStatus.NOT_FOUND);
-//	            }
-//
-//	            existingTransaction.setTransactionDate(updatedTransaction.getTransactionDate());
-//	            existingTransaction.setAmount(updatedTransaction.getAmount());
-//	            existingTransaction.setDescription(updatedTransaction.getDescription());
-//
-//	            transactionService.saveTransaction(existingTransaction);
-//	            return new ResponseEntity<>("Transaction updated successfully", HttpStatus.OK);
-//
-//	        } catch (Exception e) {
-//	            return new ResponseEntity<>("Failed to update transaction: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-//	        }
-//	    }
 	    
 	    @PutMapping("/updatetransactions/{transactionId}")
 	    @PreAuthorize("hasRole('ADMIN') or (hasRole('USER') and @transactionSecurity.canUpdateTransaction(principal, #transactionId))")
