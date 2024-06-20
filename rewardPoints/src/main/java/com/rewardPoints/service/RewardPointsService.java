@@ -3,7 +3,6 @@ package com.rewardPoints.service;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 import javax.transaction.Transactional;
 
@@ -49,7 +48,7 @@ public class RewardPointsService {
     @Transactional
     public TransactionResponseDTO saveTransactionAndRewardPoints(TransactionRequestDTO requestDTO) {
         double amount = requestDTO.getAmount();
-        int pointsEarned = calculateRewardPoints(amount);
+        int pointsEarned = calculateRewardPoints(amount,100.00,50.00,2,1);
 
         Customer customer = customerRepository.findById(requestDTO.getCustomerId())
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
@@ -79,14 +78,16 @@ public class RewardPointsService {
         return responseDTO;
     }
  
-    private int calculateRewardPoints(double amount) {
+
+    
+    private int calculateRewardPoints(double amount, double maxAmount, double minAmount, int pointsPerDollarAboveMaxAmt, int pointsPerDollarBetweenMinMax) {
         int points = 0;
 
-        if (amount > 100) {
-            points += (int) ((amount - 100) * 2); // 2 points for every dollar over $100
+        if (amount > maxAmount) {
+            points += (int) ((amount - maxAmount) * pointsPerDollarAboveMaxAmt);
         }
-        if (amount > 50) {
-            points += (int) (Math.min(amount, 100) - 50); // 1 point for every dollar between $50 and $100
+        if (amount > minAmount) {
+            points += (int) (Math.min(amount, maxAmount) - minAmount) * pointsPerDollarBetweenMinMax;
         }
 
         return points;
